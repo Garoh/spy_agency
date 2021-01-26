@@ -85,9 +85,9 @@ class HitController extends Controller
             abort(403, 'Unauthorized action.');
 
         $validator = Validator::make($request->all(), [
-            'id_user_assigned' => 'required',
-            'description' => 'required',
-            'target' => 'required',
+            'id_user_assigned' => 'required|numeric',
+            'description' => 'required|max:255',
+            'target' => 'required|max:255',
         ]);
 
         if ($validator->fails()) {
@@ -162,9 +162,9 @@ class HitController extends Controller
             return redirect()->route('hits.index', '');
 
         $validator = Validator::make($request->all(), [
-            'id_user_assigned' => 'required',
-            'description' => 'required',
-            'target' => 'required',
+            'id_user_assigned' => 'required|numeric',
+            'description' => 'required|max:255',
+            'target' => 'required|max:255',
         ]);
 
         if ($validator->fails()) {
@@ -187,5 +187,66 @@ class HitController extends Controller
 
 
         return redirect()->route('hits.index', ['updated' => true]);
+    }
+
+    public function bulk(Request $request)
+    {
+        if (Auth::user()->type == 3) 
+            abort(403, 'Unauthorized action.');
+
+        if (Auth::user()->id == 1){
+            $model = Hit::where('status', 0)->get();
+            $hitmens = User::where('id', '<>', 1)
+                            ->where('active', 1)
+                            ->get();
+        }
+
+        if (Auth::user()->type == 2){
+            $managerUsers = ManagerUsers::where('id_user_manager', Auth::user()->id)
+                                ->pluck('id_user_hitmen')
+                                ->toArray();
+
+            array_push($managerUsers, Auth::user()->id);
+
+            $model = Hit::whereIn('id_user_assigned', $managerUsers)
+                        ->where('status', 0)->get();
+
+            $hitmens = User::whereIn('id', $managerUsers)
+                            ->where('active', 1)
+                            ->get();
+        }
+
+        $created = $request->created ? 'Hit Bulked' : null;
+
+        return view('hits.bulk', compact('model', 'created', 'hitmens'));
+    }
+
+    public function bulkGenerate(Request $request)
+    {
+        if (Auth::user()->type == 3) 
+            abort(403, 'Unauthorized action.');
+
+        if (!isset($request->check)) {
+           abort(403, 'Request invalid.');
+        }
+
+        foreach ($request->check as $idHit) {
+            if (Auth::user()->type == 2) {
+                $managerUsers = ManagerUsers::where('id_user_manager', Auth::user()->id)
+                                ->pluck('id_user_hitmen')
+                                ->toArray();
+
+                if (in_array($request->id_user_assigned, $managerUsers)) {
+                    abort(403, 'Request invalid.');
+                } 
+            }
+
+
+            $id_user_assigned = $request->id_user_assigned;
+
+            $hit = Hit::find($idHit)->update(['id_user_assigned' => $id_user_assigned]);
+        }
+
+        return redirect()->route('hits.bulk', 'created=true');
     }
 }

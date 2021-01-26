@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
-	<h1>Hits</h1>
+	<h1>Users</h1>
 
 	<p>
 		{{ $created }}

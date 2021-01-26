@@ -7,9 +7,14 @@
 		{{ $created }}
 		{{ $updated }}
 	</p>
-	<p>
-		<a href="{{ route('hits.create') }}">Create</a>	
-	</p>
+
+	@if(Auth::user()->type != 3)
+		<p>
+			<a href="{{ route('hits.create') }}">Create</a>	
+			 | 
+			<a href="{{ route('hits.bulk') }}">Bulk</a>	
+		</p>
+	@endif	
 
 	<table style="width: 100%;" border="1">
 		<tr>

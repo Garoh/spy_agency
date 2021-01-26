@@ -16,9 +16,13 @@ use Illuminate\Support\Facades\Route;
 Auth::routes();
 Route::redirect('/', '/hits');
 
+Route::get('hits/bulk', 'HitController@bulk')->name('hits.bulk')->middleware('auth');
+Route::post('hits/bulk/generate', 'HitController@bulkGenerate')->name('hits.bulkGenerate')->middleware('auth');
 
 Route::resource('users', 'UserController')->middleware('auth');
 Route::resource('hits', 'HitController')->middleware('auth');
+
+
 
 
 
